@@ -35,14 +35,13 @@ class DB:
             logger.error(e.__str__())
 
     def add_to_cart(self, user_id, product, amount, screen_name, product_id):
-        pr = self.get_product_from_cart_by_id(product_id)
+        pr = self.get_product_from_cart_by_id(product_id, user_id)
         if pr:
             try:
                 am = pr[2] + 1
-                self.session.execute("UPDATE cart "
-                                     "SET product = ?, amount = ?, user_id = ?, product_screen_name= ? "
-                                     "WHERE product_id = ?",
-                                     (product, am, user_id, screen_name, product_id))
+                self.session.execute("UPDATE cart SET amount = ?"
+                                     "WHERE product_id = ? AND user_id = ?",
+                                     (am, product_id, user_id))
                 self.con.commit()
             except Exception as e:
                 logger.error(e.__str__())
@@ -68,9 +67,11 @@ class DB:
             logger.error(e.__str__())
         return None
 
-    def get_product_from_cart_by_id(self, pr_id):
+    def get_product_from_cart_by_id(self, pr_id, user_id):
         try:
-            res = self.session.execute("SELECT * FROM cart WHERE product_id = ?", (pr_id,))
+            res = self.session.execute("SELECT * FROM cart "
+                                       "WHERE product_id = ? "
+                                       "AND user_id = ?", (pr_id, user_id))
             return res.fetchone()
         except Exception as e:
             logger.error(e.__str__())
