@@ -67,13 +67,12 @@ async def callback(cb: CallbackQuery):
         pr = repo.get_product_by_name(cb.data)
         repo.remove_from_cart()
     else:
-        match cb.data:
-            case "Catalog":
-                await catalog(cb.message)
-            case "buy":
-                pass
-            case _:
-                await echo(cb.message)
+        if cb.data == "Catalog":
+            await catalog(cb.message)
+        elif cb.data == "buy":
+            pass
+        else:
+            await echo(cb.message)
 
 
 @router.message(Command("cancel"))
