@@ -4,10 +4,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ReplyKeyboardRemove, \
     KeyboardButton
-from aiogram.utils.markdown import hbold
+from aiogram.utils.markdown import hbold, hitalic
 
 from bot import keyboards
-from conf import ADMIN_IDS
+from conf import ADMIN_IDS, EMOJI
 from services import DB
 from utils import Logger
 
@@ -17,14 +17,19 @@ router = Router()
 repo = DB()
 
 
+def get_admin_panel(user_id):
+    if str(user_id) in ADMIN_IDS:
+        return keyboards.adm_main
+    return keyboards.main
+
+
 @router.message(CommandStart())
 async def start(message: Message):
     if str(message.from_user.id) in ADMIN_IDS:
-        keyboards.main.keyboard = keyboards.adm_kb
-        await message.answer(f"Hello {hbold(message.from_user.full_name)} {message.from_user.id}!", reply_markup=keyboards.main)
+        await message.answer(f"{EMOJI[5]} Hello {hbold(message.from_user.full_name)} {message.from_user.id}!",
+                             reply_markup=keyboards.adm_main)
     else:
-        keyboards.main.keyboard = keyboards.main_kb
-        await message.answer(f"Hello {hbold(message.from_user.full_name)}!", reply_markup=keyboards.main)
+        await message.answer(f"{EMOJI[5]} Hello {hbold(message.from_user.full_name)}!", reply_markup=keyboards.main)
 
 
 @router.message(F.text == 'Catalog')
@@ -32,17 +37,17 @@ async def catalog(message: Message):
     result = repo.get_all_product()
     inlines = []
     for res in result:
-        inline = [InlineKeyboardButton(text=res[1], callback_data=f'{res[3]}')]
+        inline = [InlineKeyboardButton(text=f'{res[1]} {res[2]}kg', callback_data=f'{res[3]}:add')]
         inlines.append(inline)
     products = InlineKeyboardMarkup(inline_keyboard=inlines)
 
-    await message.answer(text=hbold("Catalog:"), reply_markup=products) if result \
+    await message.answer(text=f'{hbold("Catalog:")}\n{hitalic("Price: tg/kg")}', reply_markup=products) if result \
         else await message.answer(text=f"Shop is empty...")
 
 
 @router.message(F.text == 'Contacts')
 async def contacts(message: Message):
-    await message.answer(text=hbold("Contacts:"), reply_markup=keyboards.socials)
+    await message.answer(text=hbold(f"{EMOJI[2]} Contacts:"), reply_markup=keyboards.socials)
 
 
 @router.message(F.text == 'Cart')
@@ -53,19 +58,21 @@ async def cart(message: Message):
         inline = [InlineKeyboardButton(text=f'{res[1]} {res[2]}', callback_data=f'{res[4]}:remove')]
         inlines.append(inline)
     user_cart = InlineKeyboardMarkup(inline_keyboard=inlines)
-    await message.answer(text=hbold(":cart: Cart:"), reply_markup=user_cart) if result \
+    await message.answer(text=f'{EMOJI[1]} {hbold("Cart:")}', reply_markup=user_cart) if result \
         else await message.answer(text=f"Cart is empty...")
 
 
 @router.callback_query(lambda cb: True)
 async def callback(cb: CallbackQuery):
+    product = cb.data.split(":")[0]
     if cb.data.endswith(":add"):
-        pr = repo.get_product_by_name(cb.data)
+        pr = repo.get_product_by_name(product)
         repo.add_to_cart(user_id=cb.from_user.id, product=pr[1], amount=1, screen_name=pr[3], product_id=pr[0])
-        await cb.message.answer(text=f"Added to cart!")
+        await cb.message.answer(text=f"{EMOJI[4]} Added to cart!")
     elif cb.data.endswith(":remove"):
-        pr = repo.get_product_by_name(cb.data)
-        repo.remove_from_cart()
+        pr = repo.get_product_by_name(product)
+        repo.remove_from_cart(user_id=cb.from_user.id, product_id=pr[0])
+        await cb.message.answer(text=f"{EMOJI[3]} Removed from cart!")
     else:
         if cb.data == "Catalog":
             await catalog(cb.message)
@@ -81,13 +88,13 @@ async def cancel_handler(message: Message, state: FSMContext) -> None:
     if current_state is None:
         await message.answer(
             "okay...",
-            reply_markup=ReplyKeyboardRemove(),
+            reply_markup=get_admin_panel(message.from_user.id),
         )
     else:
         await state.clear()
         await message.answer(
             "Cancelled.",
-            reply_markup=ReplyKeyboardRemove(),
+            reply_markup=get_admin_panel(message.from_user.id),
         )
 
 
@@ -101,8 +108,11 @@ class AddProduct(StatesGroup):
 @router.message(F.text == "Add product")
 @router.message(F.text == "/add_product")
 async def cmd_start(message: Message, state: FSMContext):
+    if str(message.from_user.id) not in ADMIN_IDS:
+        await state.clear()
+        return
     await state.set_state(AddProduct.NAME)
-    await message.answer(text="Hi! To add a new product, please provide the Name of product:\n"
+    await message.answer(text="To add a new product, please provide the Name of product:\n"
                               "Type /cancel to cancel.")
 
 
@@ -125,11 +135,11 @@ async def process_pr_price(message: Message, state: FSMContext):
     await state.update_data(price=message.text)
     data = await state.get_data()
     await state.clear()
-    scr = data["name"][0].lower() + data['name'][1:] + ":add"
+    scr = data["name"][0].lower() + data['name'][1:]
     repo.add_product(name=data["name"], amount=data["amount"], screen_name=scr, price=data['price'])
     await message.reply(f"Thank you! {data['name']} added!")
 
 
 @router.message()
 async def echo(message: Message):
-    await message.answer(text=f"Please, choose command:", reply_markup=keyboards.main)
+    await message.answer(text=f"Please, choose command:", reply_markup=get_admin_panel(message.from_user.id))

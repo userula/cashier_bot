@@ -56,8 +56,13 @@ class DB:
                 logger.error(e.__str__())
                 self.con.rollback()
 
-    def remove_from_cart(self):
-        pass
+    def remove_from_cart(self, user_id, product_id):
+        try:
+            self.session.execute("DELETE FROM cart "
+                                 "WHERE product_id = ? AND user_id = ?",
+                                 (product_id, user_id))
+        except Exception as e:
+            logger.error(e.__str__())
 
     def get_cart_by_user_id(self, user_id):
         try:

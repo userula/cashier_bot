@@ -16,6 +16,9 @@ adm_kb = [
     [KeyboardButton(text='Add product')]
 ]
 
+adm_main = ReplyKeyboardMarkup(keyboard=adm_kb,
+                               resize_keyboard=True,
+                               input_field_placeholder='Выберите пункт ниже')
 
 main = ReplyKeyboardMarkup(keyboard=main_kb,
                            resize_keyboard=True,
