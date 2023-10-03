@@ -64,12 +64,13 @@ async def cart(message: Message):
 
 @router.callback_query(lambda cb: True)
 async def callback(cb: CallbackQuery):
-    product = cb.data.split(":")[0]
     if cb.data.endswith(":add"):
+        product = cb.data.split(":")[0]
         pr = repo.get_product_by_name(product)
         repo.add_to_cart(user_id=cb.from_user.id, product=pr[1], amount=1, screen_name=pr[3], product_id=pr[0])
         await cb.message.answer(text=f"{EMOJI[4]} Added to cart!")
     elif cb.data.endswith(":remove"):
+        product = cb.data.split(":")[0]
         pr = repo.get_product_by_name(product)
         repo.remove_from_cart(user_id=cb.from_user.id, product_id=pr[0])
         await cb.message.answer(text=f"{EMOJI[3]} Removed from cart!")
