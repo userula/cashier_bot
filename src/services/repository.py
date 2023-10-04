@@ -55,14 +55,19 @@ class DB:
             except Exception as e:
                 logger.error(e.__str__())
                 self.con.rollback()
+        self.change_product_count(product_id=product_id, plus=False)
 
     def remove_from_cart(self, user_id, product_id):
+        pr = self.get_product_from_cart_by_id(product_id, user_id)
         try:
             self.session.execute("DELETE FROM cart "
                                  "WHERE product_id = ? AND user_id = ?",
                                  (product_id, user_id))
+            self.change_product_count(product_id=product_id)
         except Exception as e:
             logger.error(e.__str__())
+        if pr:
+            self.change_product_count(product_id=product_id, counter=int(pr[2]))
 
     def get_cart_by_user_id(self, user_id):
         try:
@@ -81,6 +86,22 @@ class DB:
         except Exception as e:
             logger.error(e.__str__())
         return None
+
+    def change_product_count(self, product_id, plus=True, counter=1):
+        pr = self.get_product_by_id(product_id)
+        if pr:
+            try:
+                if plus:
+                    am = pr[2] + counter
+                else:
+                    am = pr[2] - counter
+                self.session.execute("UPDATE product SET amount = ? "
+                                     "WHERE id = ?",
+                                     (am, product_id))
+                self.con.commit()
+            except Exception as e:
+                logger.error(e.__str__())
+                self.con.rollback()
 
     def get_product_by_name(self, name):
         try:
