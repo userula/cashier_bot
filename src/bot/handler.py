@@ -36,9 +36,20 @@ async def start(message: Message):
 async def catalog(message: Message):
     result = repo.get_all_product()
     inlines = []
-    for res in result:
-        inline = [InlineKeyboardButton(text=f'{res[1]} {res[2]}kg', callback_data=f'{res[3]}:add')]
-        inlines.append(inline)
+    if len(result) < 5:
+        for res in result:
+            inline = [InlineKeyboardButton(text=f'{res[1]} {res[2]}kg', callback_data=f'{res[3]}:add')]
+            inlines.append(inline)
+    else:
+        print(len(result))
+        for i in range(0, len(result), 2):
+            if i + 1 == len(result):
+                inline = [
+                    InlineKeyboardButton(text=f'{result[i][1]} {result[i][2]}kg', callback_data=f'{result[i][3]}:add')]
+            else:
+                inline = [InlineKeyboardButton(text=f'{result[i][1]} {result[i][2]}kg', callback_data=f'{result[i][3]}:add'),
+                          InlineKeyboardButton(text=f'{result[i + 1][1]} {result[i + 1][2]}kg', callback_data=f'{result[i + 1][3]}:add')]
+            inlines.append(inline)
     products = InlineKeyboardMarkup(inline_keyboard=inlines)
 
     await message.answer(text=f'{hbold("Catalog:")}\n{hitalic("Price: tg/kg")}', reply_markup=products) if result \
