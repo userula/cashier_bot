@@ -26,13 +26,13 @@ def get_admin_panel(user_id):
 @router.message(CommandStart())
 async def start(message: Message):
     if str(message.from_user.id) in ADMIN_IDS:
-        await message.answer(f"{EMOJI[5]} Hello {hbold(message.from_user.full_name)} {message.from_user.id}!",
+        await message.answer(f"{EMOJI['handshake']} Hello {hbold(message.from_user.full_name)} {message.from_user.id}!",
                              reply_markup=keyboards.adm_main)
     else:
-        await message.answer(f"{EMOJI[5]} Hello {hbold(message.from_user.full_name)}!", reply_markup=keyboards.main)
+        await message.answer(f"{EMOJI['handshake']} Hello {hbold(message.from_user.full_name)}!", reply_markup=keyboards.main)
 
 
-@router.message(F.text == 'Catalog')
+@router.message(F.text == f'{EMOJI["catalog"]} Catalog')
 async def catalog(message: Message):
     result = repo.get_all_product()
     inlines = []
@@ -41,7 +41,6 @@ async def catalog(message: Message):
             inline = [InlineKeyboardButton(text=f'{res[1]} {res[2]}kg', callback_data=f'{res[3]}:add')]
             inlines.append(inline)
     else:
-        print(len(result))
         for i in range(0, len(result), 2):
             if i + 1 == len(result):
                 inline = [
@@ -56,12 +55,12 @@ async def catalog(message: Message):
         else await message.answer(text=f"Shop is empty...")
 
 
-@router.message(F.text == 'Contacts')
+@router.message(F.text == f'{EMOJI["phone"]} Contacts')
 async def contacts(message: Message):
-    await message.answer(text=hbold(f"{EMOJI[2]} Contacts:"), reply_markup=keyboards.socials)
+    await message.answer(text=hbold(f"{EMOJI['phone']} Contacts:"), reply_markup=keyboards.socials)
 
 
-@router.message(F.text == 'Cart')
+@router.message(F.text == f'{EMOJI["cart"]} Cart')
 async def cart(message: Message):
     result = repo.get_cart_by_user_id(message.from_user.id)
     inlines = []
@@ -69,7 +68,7 @@ async def cart(message: Message):
         inline = [InlineKeyboardButton(text=f'{res[1]} {res[2]}', callback_data=f'{res[4]}:remove')]
         inlines.append(inline)
     user_cart = InlineKeyboardMarkup(inline_keyboard=inlines)
-    await message.answer(text=f'{EMOJI[1]} {hbold("Cart:")}', reply_markup=user_cart) if result \
+    await message.answer(text=f'{EMOJI["cart"]} {hbold("Cart:")}', reply_markup=user_cart) if result \
         else await message.answer(text=f"Cart is empty...")
 
 
@@ -79,12 +78,12 @@ async def callback(cb: CallbackQuery):
         product = cb.data.split(":")[0]
         pr = repo.get_product_by_name(product)
         repo.add_to_cart(user_id=cb.from_user.id, product=pr[1], amount=1, screen_name=pr[3], product_id=pr[0])
-        await cb.message.answer(text=f"{EMOJI[4]} Added to cart!")
+        await cb.message.answer(text=f"{EMOJI['green']} Added to cart!")
     elif cb.data.endswith(":remove"):
         product = cb.data.split(":")[0]
         pr = repo.get_product_by_name(product)
         repo.remove_from_cart(user_id=cb.from_user.id, product_id=pr[0])
-        await cb.message.answer(text=f"{EMOJI[3]} Removed from cart!")
+        await cb.message.answer(text=f"{EMOJI['red']} Removed from cart!")
     else:
         if cb.data == "Catalog":
             await catalog(cb.message)
@@ -117,7 +116,7 @@ class AddProduct(StatesGroup):
 
 
 # Start command handler to initiate the conversation
-@router.message(F.text == "Add product")
+@router.message(F.text == f"{EMOJI['add']} Add product")
 @router.message(F.text == "/add_product")
 async def cmd_start(message: Message, state: FSMContext):
     if str(message.from_user.id) not in ADMIN_IDS:
