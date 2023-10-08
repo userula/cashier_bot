@@ -1,19 +1,19 @@
 from aiogram.types import (ReplyKeyboardMarkup, KeyboardButton,
                            InlineKeyboardMarkup, InlineKeyboardButton)
 
+from conf import EMOJI
+
 main_kb = [
-    [KeyboardButton(text='Catalog'),
-     KeyboardButton(text='Cart')],
-    [KeyboardButton(text='My profile'),
-     KeyboardButton(text='Contacts')]
+    [KeyboardButton(text=f'{EMOJI["catalog"]} Catalog'),
+     KeyboardButton(text=f'{EMOJI["cart"]} Cart')],
+    [KeyboardButton(text=f'{EMOJI["phone"]} Contacts')]
 ]
 
 adm_kb = [
-    [KeyboardButton(text='Catalog'),
-     KeyboardButton(text='Cart')],
-    [KeyboardButton(text='My profile'),
-     KeyboardButton(text='Contacts')],
-    [KeyboardButton(text='Add product')]
+    [KeyboardButton(text=f'{EMOJI["catalog"]} Catalog'),
+     KeyboardButton(text=f'{EMOJI["cart"]} Cart')],
+    [KeyboardButton(text=f'{EMOJI["phone"]} Contacts')],
+    [KeyboardButton(text=f'{EMOJI["add"]} Add product')]
 ]
 
 adm_main = ReplyKeyboardMarkup(keyboard=adm_kb,
@@ -22,6 +22,7 @@ adm_main = ReplyKeyboardMarkup(keyboard=adm_kb,
 
 main = ReplyKeyboardMarkup(keyboard=main_kb,
                            resize_keyboard=True,
+                           selective=True,
                            input_field_placeholder='Выберите пункт ниже')
 
 

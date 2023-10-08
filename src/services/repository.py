@@ -12,7 +12,7 @@ class DB:
         self._prepare()
 
     def _connect(self):
-        self.con = sqlite3.connect("src/db/lite_db.db")
+        self.con = sqlite3.connect("db/lite_db.db")
         self.session = self.con.cursor()
 
     def _prepare(self):
@@ -63,11 +63,18 @@ class DB:
             self.session.execute("DELETE FROM cart "
                                  "WHERE product_id = ? AND user_id = ?",
                                  (product_id, user_id))
-            self.change_product_count(product_id=product_id)
         except Exception as e:
             logger.error(e.__str__())
         if pr:
             self.change_product_count(product_id=product_id, counter=int(pr[2]))
+
+    def clear_cart_by_user_id(self, user_id):
+        try:
+            self.session.execute("DELETE FROM cart "
+                                 "WHERE user_id = ?",
+                                 (user_id, ))
+        except Exception as e:
+            logger.error(e.__str__())
 
     def get_cart_by_user_id(self, user_id):
         try:
@@ -92,9 +99,9 @@ class DB:
         if pr:
             try:
                 if plus:
-                    am = pr[2] + counter
+                    am = int(pr[2]) + counter
                 else:
-                    am = pr[2] - counter
+                    am = int(pr[2]) - counter
                 self.session.execute("UPDATE product SET amount = ? "
                                      "WHERE id = ?",
                                      (am, product_id))
