@@ -68,6 +68,14 @@ class DB:
         if pr:
             self.change_product_count(product_id=product_id, counter=int(pr[2]))
 
+    def clear_cart_by_user_id(self, user_id):
+        try:
+            self.session.execute("DELETE FROM cart "
+                                 "WHERE user_id = ?",
+                                 (user_id, ))
+        except Exception as e:
+            logger.error(e.__str__())
+
     def get_cart_by_user_id(self, user_id):
         try:
             res = self.session.execute("SELECT * FROM cart WHERE user_id = ?", (user_id,))
@@ -91,9 +99,9 @@ class DB:
         if pr:
             try:
                 if plus:
-                    am = pr[2] + counter
+                    am = int(pr[2]) + counter
                 else:
-                    am = pr[2] - counter
+                    am = int(pr[2]) - counter
                 self.session.execute("UPDATE product SET amount = ? "
                                      "WHERE id = ?",
                                      (am, product_id))
