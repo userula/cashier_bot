@@ -39,7 +39,11 @@ async def start(message: Message):
 
 @router.message(F.text == f'{EMOJI["catalog"]} Catalog')
 async def catalog(message: Message):
-    result = repo.get_all_product()
+    products = repo.get_all_product()
+    result = []
+    for res in products:
+        if res[2] > 0:
+            result.append(res)
     inlines = []
     if len(result) < 5:
         for res in result:
@@ -47,8 +51,6 @@ async def catalog(message: Message):
             inlines.append(inline)
     else:
         for i in range(0, len(result), 2):
-            if int(result[i][4]) == 0 or int(result[i + 1][4]) == 0:
-                continue
             if i + 1 == len(result):
                 inline = [
                     InlineKeyboardButton(text=f'{result[i][1]} {result[i][2]}kg', callback_data=f'{result[i][3]}:add')]
@@ -107,12 +109,20 @@ async def callback(cb: CallbackQuery, state: FSMContext):
 
 class Address(StatesGroup):
     name = State()
+    phone = State()
     address = State()
 
 
 @router.message(Address.name)
 async def process_name(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
+    await state.set_state(Address.phone)
+    await message.reply(f"{EMOJI['address']} Provide phone number:")
+
+
+@router.message(Address.phone)
+async def process_phone(message: Message, state: FSMContext):
+    await state.update_data(phone=message.text)
     await state.set_state(Address.address)
     await message.reply(f"{EMOJI['address']} Provide address:")
 
@@ -125,16 +135,18 @@ async def process_address(message: Message, state: FSMContext):
     d = {
         "address": data['address'],
         "name": data['name'],
+        "phone": data['phone'],
         "cart": repo.get_cart_by_user_id(user_id=message.from_user.id)
     }
     await notify_admin(data=d, message=message)
     repo.clear_cart_by_user_id(user_id=message.from_user.id)
+    repo.clear_products()
     await message.reply("Thank you for purchase!")
 
 
 async def notify_admin(data, message):
     notify_text = f"{EMOJI['order']} NEW ORDER!!!\n" \
-                  f"{EMOJI['user']} {data['name']}\n" \
+                  f"{EMOJI['user']} {data['name']}: {data['phone']}\n" \
                   f"{EMOJI['address']} {data['address']}\n" \
                   f"{format_table(data['cart'])}"
     for admin in ADMIN_IDS:
