@@ -110,6 +110,15 @@ class DB:
                 logger.error(e.__str__())
                 self.con.rollback()
 
+
+    def delete_product_by_id(self, product_id):
+        try:
+            self.session.execute("DELETE FROM product "
+                                 "WHERE id = ?",
+                                 (product_id, ))
+        except Exception as e:
+            logger.error(e.__str__())
+
     def get_product_by_name(self, name):
         try:
             res = self.session.execute("SELECT * FROM product WHERE product_screen_name = ?", (name,))
