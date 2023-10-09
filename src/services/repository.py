@@ -12,7 +12,7 @@ class DB:
         self._prepare()
 
     def _connect(self):
-        self.con = sqlite3.connect("db/lite_db.db")
+        self.con = sqlite3.connect("src/db/lite_db.db")
         self.session = self.con.cursor()
 
     def _prepare(self):
