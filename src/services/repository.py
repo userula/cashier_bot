@@ -153,3 +153,10 @@ class DB:
         except Exception as e:
             logger.error(e.__str__())
             self.con.rollback()
+
+    def clear_products(self):
+        try:
+            self.session.execute("DELETE FROM product "
+                                 "WHERE amount < 1;")
+        except Exception as e:
+            logger.error(e.__str__())
