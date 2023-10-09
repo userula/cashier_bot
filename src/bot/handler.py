@@ -47,6 +47,8 @@ async def catalog(message: Message):
             inlines.append(inline)
     else:
         for i in range(0, len(result), 2):
+            if int(result[i][4]) == 0 or int(result[i + 1][4]) == 0:
+                continue
             if i + 1 == len(result):
                 inline = [
                     InlineKeyboardButton(text=f'{result[i][1]} {result[i][2]}kg', callback_data=f'{result[i][3]}:add')]
