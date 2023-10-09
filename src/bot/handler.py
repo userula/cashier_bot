@@ -42,7 +42,7 @@ async def catalog(message: Message):
     products = repo.get_all_product()
     result = []
     for res in products:
-        if res[2] > 0:
+        if int(res[2]) > 0:
             result.append(res)
     inlines = []
     if len(result) < 5:
